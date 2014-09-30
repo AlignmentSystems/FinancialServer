@@ -1,85 +1,139 @@
 ﻿<!DOCTYPE html>
-<!"https://cdn.socket.io/socket.io-1.0.0.js"-->
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+//
+//
+// Financial Server - a node.js example of a simplified financial markets real-time data server
+// Typical use case: Allow clients of an financial services firm to see the current bid and ask prices of
+// stocks in their portfolio in real time.
+//
+// Author   :   John Greenan
+// Date     :   30th September 2014
+//
+//
+//
+
 <script src="/socket.io/socket.io.js"></script>
+
 <script>
+
     var socket = io.connect();
-        socket.on('connect', function () {
+    socket.on('connect', function () {
         console.log('Client has connected to server');
-    });
-    socket.on('TickForClient', function (data) {
-        console.log('Received' + data);
-        var Received = JSON.parse(data)
-        console.log(Received);
-        
+        IsItFirst = true;
     });
 
+    socket.on('disconnect', function () {
+        console.log('Disconnected');
+    });
+
+    socket.once('TickForClient', function (data) {
+        //  This is essentially a copy and paste of the socket.on code with some minor changes
+        //  This is done in this manor for clarity, it's not an elegant solution and would be refactored out in normal usage...
+        //console.log('Received ' + data);
+        var Received = JSON.parse(data);
+        //console.log(Received);
+
+        var Target = document.getElementById('TickTable');
+        var Row = document.createElement("TR");
+
+        var cell1 = document.createElement("TD");
+        cell1.innerHTML = 'Stock';
+
+        var cell2 = document.createElement("TD");
+        cell2.innerHTML = 'Side';
+
+        var cell3 = document.createElement("TD");
+        cell3.innerHTML = 'Last Traded Price';
+
+        var cell4 = document.createElement("TD");
+        cell4.innerHTML = 'Bid';
+
+        var cell5 = document.createElement("TD");
+        cell5.innerHTML = 'Ask';
+
+        var cell6 = document.createElement("TD");
+        cell6.innerHTML = 'Volume';
+
+        var cell7 = document.createElement("TD");
+        cell7.innerHTML = 'Timestamp';
+
+        Row.appendChild(cell1);
+        Row.appendChild(cell2);
+        Row.appendChild(cell3);
+        Row.appendChild(cell4);
+        Row.appendChild(cell5);
+        Row.appendChild(cell6);
+        Row.appendChild(cell7);
+
+        Target.appendChild(Row);
+    });
+
+
+    socket.on('TickForClient', function (data) {
+        //console.log('Received ' + data);
+        var Received = JSON.parse(data);
+        //console.log(Received);
+        //We add each item to the table here
+
+            var Target = document.getElementById('TickTable');
+            var Row = document.createElement("TR");
+
+            var cell1 = document.createElement("TD");
+            cell1.innerHTML = Received.stock;
+
+            var cell2 = document.createElement("TD");
+            cell2.innerHTML = Received.Side;
+
+            var cell3 = document.createElement("TD");
+            cell3.innerHTML = Received.LastTrade;
+
+            var cell4 = document.createElement("TD");
+            cell4.innerHTML = Received.Bid;
+
+            var cell5 = document.createElement("TD");
+            cell5.innerHTML = Received.Ask;
+
+            var cell6 = document.createElement("TD");
+            cell6.innerHTML = Received.Volume;
+
+            var cell7 = document.createElement("TD");
+            cell7.innerHTML = Received.Timestamp;
+
+            Row.appendChild(cell1);
+            Row.appendChild(cell2);
+            Row.appendChild(cell3);
+            Row.appendChild(cell4);
+            Row.appendChild(cell5);
+            Row.appendChild(cell6);
+            Row.appendChild(cell7);
+            Target.appendChild(Row);
+    });
+     
 </script>
 
-    <html xmlns="http://www.w3.org/1999/xhtml">
-    <head>
-        <meta charset="utf-8" />
-        <title>Financial Server Demonstration Code</title>
-        <style>
-            * {
-                margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    }
-    table,th,td{
-        border: 1px solid black}
-    body {
-        font: 13px Helvetica, Arial;
-    }
-
-    form {
-        background: #000;
-        padding: 3px;
-        position: fixed;
-        bottom: 0;
-        width: 100%;
-    }
-
-    form input {
-        border: 0;
-        padding: 10px;
-        width: 90%;
-        margin-right: .5%;
-    }
-
-    form button {
-        width: 9%;
-        background: rgb(130, 224, 255);
-        border: none;
-        padding: 10px;
-    }
-
-        #messages {
-            list-style-type: none;
+<head>
+    <meta charset="utf-8" />
+    <title>Financial Server Demonstration Code</title>
+    <style>
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
 
-            #messages li {
-        padding: 5px 10px;
-            }
+        table, th, td {
+            border: 1px solid black;
+        }
 
-                #messages li:nth-child(odd) {
-        background: #eee;
-                }
+        body {
+            font: 13px Helvetica, Arial;
+        }
+
     </style>
 </head>
 
-
-
 <body>
-
-
-<table id="StockDataTable" style="width:100%">
-       <tr>  <th>Stock</th>  <th>Last Trade</th> <th>Bid</th>    <th>Ask</th>    <th>Volume</th> </tr>
-       <tr> <td>ABC</td><div id="ABC_LAST"></div>    <td></td>           <td></td>       <td></td>       <td></td>       </tr>
-       <tr> <td>DEF</td><div id="DEF_LAST"></div>    <td></td>           <td></td>       <td></td>       <td></td>       </tr>
-       <tr> <td>GHI</td><div id="GHI_LAST"></div>    <td></td>           <td></td>       <td></td>       <td></td>       </tr>
-       <tr> <td>JKL</td><div id="JKL_LAST"></div>    <td></td>           <td></td>       <td></td>       <td></td>       </tr>
-   </table>
+    <div id="TickTable"></div>
 </body>
 </html>

@@ -1,0 +1,15 @@
+{
+  "name": "FinancialServer",
+  "version": "0.0.0",
+  "description": "FinancialServer",
+  "main": "server.js",
+  "author": {
+    "name": "John.Greenan",
+    "email": ""
+  },
+  "dependencies": {
+    "express": "^4.9.5",
+    "mathjs": "^1.0.1",
+    "socket.io": "^1.1.0"
+  }
+}

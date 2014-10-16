@@ -1,0 +1,206 @@
+﻿<!DOCTYPE html>
+<!-- Financial Server - a node.js example of a simplified financial markets real-time data server -->
+<!-- Typical use case: Allow clients of an financial services firm to see the current bid and ask prices of -->
+<!-- Stocks in their portfolio in real time.-->
+<!-- -->
+<!-- Author   :   John Greenan-->
+<!-- Date     :   30th September 2014-->
+<!---->
+<script src="/public/Scripts/d3.js" charset="utf-8"></script>
+<script src="/public/Scripts/sorttable.js"></script>
+<!--script src="/socket.io/socket.io.js"></!--script>-->
+<script src="/public/Scripts/primus.js"></script>
+<link rel="stylesheet" href="/Public/css/FinancialServer.css" type="text/css" />
+
+<script>
+    //var primus = new Primus.connect('ws://localhost:1337')
+    var primus = new Primus.connect();
+    primus.on('open', function () {
+        console.log('Client has connected to server');
+    })
+
+    primus.on('close', function () {
+        console.log('Disconnected');
+    });
+
+
+    //var socket = io.connect();
+
+    /*
+    socket.on('connect', function () {
+        console.log('Client has connected to server');
+    });
+    */
+
+    /*
+    socket.on('disconnect', function () {
+        console.log('Disconnected');
+    });
+    */
+    //Ok, so we have to get each incoming event, have a look at it and figure out if we are interested in it...
+    //socket.on('TickForClient', function (data) {
+
+    primus.on('data', function message(data) {
+        var Received = JSON.parse(data);
+        console.log('On tick received' + data);
+        console.log('On tick received' + data);
+        var TargetForTicks = document.getElementById('TickTable');
+        var StockReceived = Received.Stock;
+        var SideReceived = Received.Side;
+        var LastTradedPriceReceived = Received.LastTrade;
+        var BidReceived = Received.Bid;
+        var AskReceived = Received.Ask;
+        var VolumeReceived = Received.Volume;
+        var TimestampReceived = Received.Timestamp;
+        var createRow = true;
+
+        if (TargetForTicks.children.length == 0) {
+            console.log('TargetForTicks table has no rows');
+
+            //Table has no rows, so add a header...
+            var Header = document.createElement('TR');
+
+            var cell1 = document.createElement('TH');
+            cell1.innerHTML = 'Stock';
+
+            var cell2 = document.createElement('TH');
+            cell2.innerHTML = 'Side';
+
+            var cell3 = document.createElement('TH');
+            cell3.innerHTML = 'Last Traded Price';
+
+            var cell4 = document.createElement('TH');
+            cell4.innerHTML = 'Bid';
+
+            var cell5 = document.createElement('TH');
+            cell5.innerHTML = 'Ask';
+
+            var cell6 = document.createElement('TH');
+            cell6.innerHTML = 'Volume';
+
+            var cell7 = document.createElement('TH');
+            cell7.innerHTML = 'Timestamp';
+
+            Header.appendChild(cell1);
+            Header.appendChild(cell2);
+            Header.appendChild(cell3);
+            Header.appendChild(cell4);
+            Header.appendChild(cell5);
+            Header.appendChild(cell6);
+            Header.appendChild(cell7);
+
+            TargetForTicks.appendChild(Header);
+            console.log('Added header');
+            sortables_init()
+
+        };
+
+        //For the pricing grid we are looking for rows that are unique when defined by a combination of the instrument and the Side.
+        //So we will have one row for ABC as a buy and one row for ABC as a sell. Likewise for DEF, GHI and JKL.
+        createRow = true;
+        if (document.getElementById(SideReceived + '_' + StockReceived)) {
+            console.log('Exists' + StockReceived + '__' + SideReceived);
+            createRow = false;
+        };
+
+        if (createRow) {
+            console.log('Does not Exist ' + StockReceived + '__' + SideReceived);
+            //We need to use tbody to enable the sortable code to work, since it relies upon the presence of a tbody...
+            var Body = document.createElement('TBODY');
+            var Row = document.createElement('TR');
+
+            var TargetStockCell = document.createElement('TD');
+            var TargetSideCell = document.createElement('TD');
+            var TargetLastTradedCell = document.createElement('TD');
+            var TargetBidCell = document.createElement('TD');
+            var TargetAskCell = document.createElement('TD');
+            var TargetVolumeCell = document.createElement('TD');
+            var TargetTimestampCell = document.createElement('TD');
+
+            TargetStockCell.id = Received.Side + '_' + Received.Stock;
+            TargetSideCell.id = Received.Side + '_' + Received.Stock + '_' + Received.Side;
+            TargetLastTradedCell.id = Received.Stock + '_' + Received.Side + '_' + 'LastTradedPriceReceived';
+            TargetBidCell.id = Received.Stock + '_' + Received.Side + '_' + 'BidReceived'
+            TargetAskCell.id = Received.Stock + '_' + Received.Side + '_' + 'AskReceived';
+            TargetVolumeCell.id = Received.Stock + '_' + Received.Side + '_' + 'VolumeReceived';
+            TargetTimestampCell.id = Received.Stock + '_' + Received.Side + '_' + 'TimestampReceived';
+
+            Body.appendChild(Row);
+            Row.appendChild(TargetStockCell);
+            Row.appendChild(TargetSideCell);
+            Row.appendChild(TargetLastTradedCell);
+            Row.appendChild(TargetBidCell);
+            Row.appendChild(TargetAskCell);
+            Row.appendChild(TargetVolumeCell);
+            Row.appendChild(TargetTimestampCell);
+
+            TargetForTicks.appendChild(Body);
+        };
+
+        var TargetStockCell = document.getElementById(Received.Side + '_' + Received.Stock);
+        var TargetSideCell = document.getElementById(Received.Side + '_' + Received.Stock + '_' + Received.Side);
+        var TargetLastTradedCell = document.getElementById(Received.Stock + '_' + Received.Side + '_' + 'LastTradedPriceReceived');
+        var TargetBidCell = document.getElementById(Received.Stock + '_' + Received.Side + '_' + 'BidReceived');
+        var TargetAskCell = document.getElementById(Received.Stock + '_' + Received.Side + '_' + 'AskReceived');
+        var TargetVolumeCell = document.getElementById(Received.Stock + '_' + Received.Side + '_' + 'VolumeReceived');
+        var TargetTimestampCell = document.getElementById(Received.Stock + '_' + Received.Side + '_' + 'TimestampReceived');
+
+        //Code here to compares the last price and the new price
+        //If new>old then show in green, if new=old then show in clear, if new<old then show in red
+        var TargetBidCellValue=Number(document.getElementById(Received.Stock + '_' + Received.Side + '_' + 'BidReceived' ).innerHTML);
+        var TargetAskCellValue = Number(document.getElementById(Received.Stock + '_' + Received.Side+ '_' + 'AskReceived').innerHTML);
+        var TargetLastTradedCellValue = Number(document.getElementById(Received.Stock + '_' + Received.Side + '_' + 'LastTradedPriceReceived').innerHTML);
+        //Do the bid price
+        if (Number(BidReceived)>TargetBidCellValue){
+            TargetBidCell.style.background='green';
+        }
+        else if (Number(BidReceived) === TargetBidCellValue) {
+            TargetBidCell.style.background='white';
+        }
+        else{
+            TargetBidCell.style.background='red';
+        };
+
+        //Do the ask price
+        if (Number(AskReceived) > TargetAskCellValue) {
+            TargetAskCell.style.background = 'green';
+        }
+        else if (Number(AskReceived) === TargetAskCellValue) {
+            TargetAskCell.style.background = 'white';
+        }else{
+            TargetAskCell.style.background = 'red';
+        };
+
+        //Do the last traded price
+        if (Number(LastTradedPriceReceived) > TargetLastTradedCellValue) {
+            TargetLastTradedCell.style.background = 'green';
+        }
+        else if (Number(LastTradedPriceReceived) === TargetLastTradedCellValue) {
+            TargetLastTradedCell.style.background = 'white';
+        } else {
+            TargetLastTradedCell.style.background = 'red';
+        };
+
+        //    TargetBidCell.style = 'uptick';
+
+
+        TargetStockCell.innerHTML = StockReceived;
+        TargetSideCell.innerHTML = SideReceived;
+        TargetLastTradedCell.innerHTML = LastTradedPriceReceived;
+        TargetBidCell.innerHTML = BidReceived;
+        TargetAskCell.innerHTML =  AskReceived;
+        TargetVolumeCell.innerHTML = VolumeReceived;
+        TargetTimestampCell.innerHTML =  TimestampReceived;
+    });
+
+    </script>
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8" />
+        <title></title>
+    </head>
+    <body>
+        <table class="sortable" id="TickTable"></table>
+        <!--button onclick="sortables_init()" id="SortButton">Sort Table</!--button>-->
+    </body>
+</html>

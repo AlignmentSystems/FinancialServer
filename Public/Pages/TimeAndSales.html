@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<!-- Financial Server - a node.js example of a simplified financial markets real-time data server -->
+<!-- Typical use case: Allow clients of an financial services firm to see the current bid and ask prices of -->
+<!-- Stocks in their portfolio in real time.-->
+<!-- -->
+<!-- Author   :   John Greenan-->
+<!-- Date     :   30th September 2014-->
+<!---->
+<script src="/public/Scripts/d3.js" charset="utf-8"></script>
+<script src="/public/Scripts/sorttable.js"></script>
+<!--script src="/socket.io/socket.io.js"></!--script>-->
+<script src="/public/Scripts/primus.js"></script>
+<link rel="stylesheet" href="/Public/css/FinancialServer.css" type="text/css"/>
+
+<script>
+    
+    //var socket = io.connect();
+    var primus = new Primus.connect();
+    primus.on('open', function () {
+        console.log('Client has connected to server');
+    })
+
+    primus.on('close', function () {
+        console.log('Disconnected');
+    });
+
+    /*
+    socket.on('connect', function () {
+        console.log('Client has connected to server');
+    });
+    */
+    /*
+    socket.on('disconnect', function () {
+        console.log('Disconnected');
+    });
+    */
+
+    //Ok, so we have to get each incoming event, have a look at it and figure out if we are interested in it...
+    //socket.on('TickForClient', function (data) {
+    primus.on('data', function message(data) {
+        var Received = JSON.parse(data);
+        console.log('On tick received' + data);
+        var TargetTimeAndSales = document.getElementById('TimeAndSales');
+
+        var StockReceived = Received.Stock;
+        var SideReceived = Received.Side;
+        var LastTradedPriceReceived = Received.LastTrade;
+        var BidReceived = Received.Bid;
+        var AskReceived = Received.Ask;
+        var VolumeReceived = Received.Volume;
+        var TimestampReceived = Received.Timestamp;
+        var createRow = true;
+
+        if (TargetTimeAndSales.children.length == 0) {
+            console.log('TargetTimeAndSales table has no rows');
+
+            //Table has no rows, so add a header...
+            var Header = document.createElement('TR');
+
+            var cell1 = document.createElement('TH');
+            cell1.innerHTML = 'Stock';
+
+            var cell2 = document.createElement('TH');
+            cell2.innerHTML = 'Side';
+
+            var cell3 = document.createElement('TH');
+            cell3.innerHTML = 'Last Traded Price';
+
+            var cell4 = document.createElement('TH');
+            cell4.innerHTML = 'Bid';
+
+            var cell5 = document.createElement('TH');
+            cell5.innerHTML = 'Ask';
+
+            var cell6 = document.createElement('TH');
+            cell6.innerHTML = 'Volume';
+
+            var cell7 = document.createElement('TH');
+            cell7.innerHTML = 'Timestamp';
+
+            Header.appendChild(cell1);
+            Header.appendChild(cell2);
+            Header.appendChild(cell3);
+            Header.appendChild(cell4);
+            Header.appendChild(cell5);
+            Header.appendChild(cell6);
+            Header.appendChild(cell7);
+
+            TargetTimeAndSales.appendChild(Header);
+            console.log('Added header');
+        };
+
+        //For the time and sales we just drop everything into the grid and the number of
+        //rows will expand...
+        var Body = document.createElement('TBODY');
+        var Row = document.createElement('TR');
+
+        var TargetStockCell = document.createElement('TD');
+        var TargetSideCell = document.createElement('TD');
+        var TargetLastTradedCell = document.createElement('TD');
+        var TargetBidCell = document.createElement('TD');
+        var TargetAskCell = document.createElement('TD');
+        var TargetVolumeCell = document.createElement('TD');
+        var TargetTimestampCell = document.createElement('TD');
+
+        Body.appendChild(Row);
+        Row.appendChild(TargetStockCell);
+        Row.appendChild(TargetSideCell);
+        Row.appendChild(TargetLastTradedCell);
+        Row.appendChild(TargetBidCell);
+        Row.appendChild(TargetAskCell);
+        Row.appendChild(TargetVolumeCell);
+        Row.appendChild(TargetTimestampCell);
+
+
+        TargetStockCell.innerHTML = StockReceived;
+        TargetSideCell.innerHTML = SideReceived;
+        TargetLastTradedCell.innerHTML = LastTradedPriceReceived;
+        TargetBidCell.innerHTML = BidReceived;
+        TargetAskCell.innerHTML = AskReceived;
+        TargetVolumeCell.innerHTML = VolumeReceived;
+        TargetTimestampCell.innerHTML = TimestampReceived;
+
+        TargetTimeAndSales.appendChild(Body);
+
+        TargetStockCell.innerHTML = StockReceived;
+        TargetSideCell.innerHTML = SideReceived;
+        TargetLastTradedCell.innerHTML = LastTradedPriceReceived;
+        TargetBidCell.innerHTML = BidReceived;
+        TargetAskCell.innerHTML = AskReceived;
+        TargetVolumeCell.innerHTML = VolumeReceived;
+        TargetTimestampCell.innerHTML = TimestampReceived;
+    });
+
+</script>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+    <table class="sortable" id="TimeAndSales"></table>
+</body>
+</html>

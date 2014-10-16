@@ -5,11 +5,14 @@
   "main": "server.js",
   "author": {
     "name": "John.Greenan",
-    "email": ""
+    "email": "enquire@alignment-systems.com"
   },
   "dependencies": {
+    "d3": "^3.4.11",
     "express": "^4.9.5",
     "mathjs": "^1.0.1",
-    "socket.io": "^1.1.0"
+    "primus": "^2.4.9",
+    "socket.io": "^0.9.17",
+    "socket.io-client": "^1.1.0"
   }
 }

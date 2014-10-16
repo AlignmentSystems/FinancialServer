@@ -1,0 +1,30 @@
+﻿<!-- Financial Server - a node.js example of a simplified financial markets real-time data server -->
+<!-- Typical use case: Allow clients of an financial services firm to see the current bid and ask prices of -->
+<!-- Stocks in their portfolio in real time.-->
+<!-- -->
+<!-- Author   :   John Greenan-->
+<!-- Date     :   30th September 2014-->
+<!---->
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    }
+
+table, th, td {
+    border: 1px solid black;
+    background-color:beige
+}
+
+body {
+    font: 13px Helvetica, Arial;
+}
+downtick{
+    background-color:red
+}
+uptick{
+    background-color:green
+}
+nochange {
+    background-color: white;
+}

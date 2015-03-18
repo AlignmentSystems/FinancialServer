@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<!-- Financial Server - a node.js example of a simplified financial markets real-time data server -->
+<!-- Typical use case: Allow clients of an financial services firm to see the current bid and ask prices of -->
+<!-- Stocks in their portfolio in real time.-->
+<!-- -->
+<!-- Author   :   John Greenan-->
+<!-- Date     :   30th September 2014-->
+<!---->
+<script src="/public/Scripts/smoothie.js"></script>
+<script src="/public/Scripts/clientlibrary.js"></script>
+<script src="/public/Scripts/primus.js"></script>
+<link rel="stylesheet" href="/Public/css/FinancialServer.css" type="text/css" />
+
+<canvas id="mycanvas" width="800" height="200"></canvas>
+
+<script>
+
+    var primus = new Primus.connect();
+
+    primus.on('open', function () {
+        console.log(CLIENTHASCONNECTEDTOSERVER);
+    });
+
+    var SendString;
+    var guid;
+    var TargetInstrumentFromMessage = DEFAULTINSTRUMENT;
+
+    (function KickStart() {
+        console.log(CALLINGGUID);
+        LocalGUID();
+
+        MessageBetweenClientAndServer.comalignmentsystemsjsontype = NAMEMESSAGEBETWEENCLIENTANDSERVER;
+        MessageBetweenClientAndServer.SendingURL = document.URL;
+        MessageBetweenClientAndServer.Verb = VERBCLOSING;
+        MessageBetweenClientAndServer.ClientSessionGuid = guid;
+        SendString = JSON.stringify(MessageBetweenClientAndServer);
+        window.addEventListener('beforeunload', function () {
+            primus.write(SendString);
+        });
+
+    }());
+
+    function LocalGUID() {
+        if (window.sessionStorage.getItem(MAGICSTRING)) {
+            guid = window.sessionStorage.getItem(MAGICSTRING);
+        } else {
+            //if we get here the item does not exist...
+            guid = GetGuid();
+            window.sessionStorage.setItem(MAGICSTRING, guid);
+        };
+        MessageBetweenClientAndServer.SendingURL = document.URL;
+        MessageBetweenClientAndServer.Verb = VERBOPENING;
+        MessageBetweenClientAndServer.ClientSessionGuid = guid;
+        primus.write(JSON.stringify(MessageBetweenClientAndServer));;
+        //alert(guid);
+    };
+
+    //primus.write(guid + '~~~~' + document.URL);
+
+    primus.on('close', function () {
+        console.log(DISCONNECTED);
+    });
+
+    var line1 = new TimeSeries();
+    var smoothie = new SmoothieChart({ grid: { strokeStyle: 'rgb(125, 0, 0)', fillStyle: 'rgb(60, 0, 0)', lineWidth: 1, millisPerLine: 250, verticalSections: 6 } });
+    smoothie.addTimeSeries(line1, { strokeStyle: 'rgb(0, 255, 0)', fillStyle: 'rgba(0, 255, 0, 0.4)', lineWidth: 3 });
+    smoothie.streamTo(document.getElementById("mycanvas"), 3000);
+
+
+    //Ok, so we have to get each incoming event, have a look at it and figure out if we are interested in it...
+    //socket.on('TickForClient', function (data) {
+
+    primus.on('data', function message(data) {
+        //We received data from the server
+        var Received = JSON.parse(data);
+
+        if (Received.comalignmentsystemsjsontype == NAMEREALTIMEPRICETICK) {
+            console.log(Received.comalignmentsystemsjsontype + ' StockGraph received: ' + Received.Stock + ' [' + TargetInstrumentFromMessage+ '] ');
+            //We need to see if this is one that is of interest to us...
+            if (TargetInstrumentFromMessage == Received.Stock) {
+                console.log('StockGraph to graph : ' + Received.Stock + ' [' + Received.Bid + ']['+TargetInstrumentFromMessage + '] ');
+                line1.append(new Date().getTime(), Received.Bid);
+            };
+        } else if (Received.comalignmentsystemsjsontype == NAMEMESSAGEBETWEENCLIENTANDSERVER) {
+            console.log(Received.comalignmentsystemsjsontype + ' ' + Received.ObjectId);
+            if (TargetInstrumentFromMessage == DEFAULTINSTRUMENT) {
+                //So far we have not been capturing ticks for any instrument 
+                TargetInstrumentFromMessage = Received.ObjectId;
+                console.log(Received.comalignmentsystemsjsontype + ' StockGraph to now graph : ' + Received.ObjectId);
+            } else if (TargetInstrumentFromMessage != Received.ObjectId) {
+                //We have received a new instrument, not the same as the old one..
+                //Therefore clear the chart...
+                };
+            };      
+        });
+  
+</script>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Graph</title>
+</head>
+<body>
+</body> 
+</html>

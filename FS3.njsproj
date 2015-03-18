@@ -32,7 +32,12 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="index.js" />
+    <Compile Include="Public\Scripts\sorttable.js" />
+    <Compile Include="Public\Scripts\serverlibrary.js" />
+    <None Include="Public\Scripts\clientlibrary.js" />
     <Content Include="Public\css\FinancialServer.css" />
+    <Content Include="Public\Pages\StockGraph.html" />
+    <Content Include="Public\Pages\StockText.html" />
     <Content Include="Public\Pages\TickData.html" />
     <Content Include="Public\Pages\TimeAndSales.html" />
     <Content Include="Public\Pages\Index.html" />

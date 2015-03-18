@@ -5,12 +5,88 @@
 <!-- Stocks in their portfolio in real time.-->
 <!-- -->
 <!-- Author   :   John Greenan-->
-<!-- Date     :   30th September 2014-->
+<!-- Date     :   30th September 2014--> 
 <!---->
-<script src="/public/Scripts/d3.js" charset="utf-8"></script>
-<script src="/public/Scripts/sorttable.js"></script>
+<script src="/public/Scripts/primus.js"></script>
+<script src="/public/Scripts/clientlibrary.js"></script>
 <link rel="stylesheet" href="/Public/css/FinancialServer.css" type="text/css"/>
+<script>
+    //variables
+    var SendString;
+    var primus = new Primus.connect();
+    var guid;
+    var date = new Date();
+    const days = 7;
 
+    //-- Fun with cookies
+    var stringToWrite;
+    var TargetCookieValue1 = encodeURI("TargetValue");
+    var TargetCookieValue2 = encodeURI(document.domain);
+
+
+    alert(getCookie(TargetCookieName1));
+    alert(getCookie(TargetCookieName2));
+
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    var expires = "; expires=" + date.toGMTString();
+
+    stringToWrite = TargetCookieName1 + "=" + TargetCookieValue1 + "; path=/" + expires;
+    document.cookie = stringToWrite;
+
+    stringToWrite = TargetCookieName2 + "=" + TargetCookieValue2 + "; path=/" + expires;
+    document.cookie = stringToWrite;
+
+    alert(getCookie(TargetCookieName1));
+    alert(getCookie(TargetCookieName2));
+    //-- Fun with cookies
+
+
+    //To do..
+    //Need to add an authentication layer on top of this code.
+    //This needs to be considered carefully.  It's one thing to serve up a glob of html from a webserver and go through authentication
+    //on the request for the page, but how do we handle the wonderful world of streaming out data?
+    //Need to look and see how other folks do this - see if there is an emerging consensus..
+    (function KickStart() {
+        console.log(CALLINGGUID);
+        LocalGUID();
+        MessageBetweenClientAndServer.comalignmentsystemsjsontype = NAMEMESSAGEBETWEENCLIENTANDSERVER;
+        MessageBetweenClientAndServer.SendingURL = document.URL;
+        MessageBetweenClientAndServer.Verb = VERBCLOSING;
+        MessageBetweenClientAndServer.ClientSessionGuid = guid;
+        SendString = JSON.stringify(MessageBetweenClientAndServer);
+        //Add an function to the beforeunload event to tell primus  
+        window.addEventListener('beforeunload', function () {
+            primus.write(SendString);
+        });
+    }());
+
+    function LocalGUID() {
+        if (window.sessionStorage.getItem(MAGICSTRING)) {
+            guid = window.sessionStorage.getItem(MAGICSTRING);
+        } else {
+            //if we get here the item does not exist...
+            guid = GetGuid();
+            window.sessionStorage.setItem(MAGICSTRING, guid);
+        };
+        MessageBetweenClientAndServer.SendingURL = document.URL;
+        MessageBetweenClientAndServer.Verb = VERBOPENING;
+        MessageBetweenClientAndServer.ClientSessionGuid = guid;
+        primus.write(JSON.stringify(MessageBetweenClientAndServer));
+        //alert(guid);
+    };
+   
+    primus.on('open', function () {
+        console.log(CLIENTHASCONNECTEDTOSERVER);
+    });
+
+    primus.on('close', function () {
+        console.log(DISCONNECTED);
+    });
+    
+    primus.on('data', function message(data) {
+    });
+
+</script>
 <html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
@@ -18,10 +94,9 @@
     <title>Financial Server Demonstration Code</title>
 </head>
 <body>
-
-    <iframe id="tickframe" src="/Public/Pages/TickData.html"  width="600" height="350" align="left">
-    </iframe>
-    <iframe id="timeandsalesframe" src="/Public/Pages/TimeAndSales.html" width="600" height="500" align="right">
-    </iframe>
+    <iframe seamless frameborder="0" id="tickframe" src="/Public/Pages/TickData.html"  width="700" height="275" align="left"></iframe>
+    <iframe seamless frameborder="0" id="timeandsalesframe" src="/Public/Pages/TimeAndSales.html" width="500" height="800" align="right"></iframe>
+    <iframe seamless frameborder="0" id="textframe" src="/Public/Pages/StockText.html" width="700" height="200" align="left"></iframe>
+    <iframe seamless frameborder="0" id="graphframe" src="/Public/Pages/StockGraph.html" width="700" height="500" align="left"></iframe>
 </body>
-</html>
+</html> 

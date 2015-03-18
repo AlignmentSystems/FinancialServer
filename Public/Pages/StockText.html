@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<!-- Financial Server - a node.js example of a simplified financial markets real-time data server -->
+<!-- Typical use case: Allow clients of an financial services firm to see the current bid and ask prices of -->
+<!-- Stocks in their portfolio in real time.-->
+<!-- -->
+<!-- Author   :   John Greenan-->
+<!-- Date     :   30th September 2014-->
+<!---->
+<script src="/public/Scripts/d3.js" charset="utf-8"></script>
+<script src="/public/Scripts/primus.js"></script>
+<script src="/public/Scripts/angular.min.js"></script>
+<script src="/public/Scripts/clientlibrary.js"></script>
+<link rel="stylesheet" href="/Public/css/FinancialServer.css" type="text/css" />
+
+<script>
+    var guid;
+    var SendString;
+    var primus = new Primus.connect();
+
+    primus.on('open', function () {
+        console.log(CLIENTHASCONNECTEDTOSERVER);
+    });
+
+    (function KickStart() {
+        console.log(CALLINGGUID);
+        LocalGUID();
+        MessageBetweenClientAndServer.comalignmentsystemsjsontype = NAMEMESSAGEBETWEENCLIENTANDSERVER;
+        MessageBetweenClientAndServer.SendingURL = document.URL;
+        MessageBetweenClientAndServer.Verb = VERBCLOSING;
+        MessageBetweenClientAndServer.ClientSessionGuid = guid;
+        SendString = JSON.stringify(MessageBetweenClientAndServer);
+        window.addEventListener('beforeunload', function () {
+            primus.write(SendString);
+        });
+
+        }());
+
+    function LocalGUID() {
+        if (window.sessionStorage.getItem(MAGICSTRING)) {
+            guid = window.sessionStorage.getItem(MAGICSTRING);
+        } else {
+            //if we get here the item does not exist...
+            guid = GetGuid();
+            window.sessionStorage.setItem(MAGICSTRING, guid);
+        };
+        MessageBetweenClientAndServer.SendingURL = document.URL;
+        MessageBetweenClientAndServer.Verb = VERBOPENING;
+        MessageBetweenClientAndServer.ClientSessionGuid = guid;
+        primus.write(JSON.stringify(MessageBetweenClientAndServer));;
+        //alert(guid);
+    };
+
+    //primus.write(guid + '~~~~' + document.URL);
+
+    primus.on('close', function () {
+        console.log(DISCONNECTED);
+    });
+     
+    //var socket = io.connect();
+
+    /*
+    socket.on('connect', function () {
+        console.log(CLIENTHASCONNECTEDTOSERVER);
+    });
+    */
+
+    /*
+    socket.on('disconnect', function () {
+        console.log(DISCONNECTED);
+    });
+    */
+    //Ok, so we have to get each incoming event, have a look at it and figure out if we are interested in it...
+    //socket.on('TickForClient', function (data) {
+
+    primus.on('data', function message(data) {
+        //We received data from the server
+        var Received = JSON.parse(data);
+        if (Received.comalignmentsystemsjsontype == NAMEREALTIMEPRICETICK) {
+            //do nothing here, we are not interested....
+        }else if(Received.comalignmentsystemsjsontype == NAMEMESSAGEBETWEENCLIENTANDSERVER){
+            var Target = document.getElementById('TextForStockDetails');
+            Target.innerHTML = Received.ObjectId + ' ' + Received.Payload;
+        };
+    });
+
+    </script>
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <meta charset="utf-8" />
+        <title>Stock commentary</title>
+    </head>
+    <body>
+        <div class="text" id="TextForStockDetails"></div>
+    </body>
+</html>

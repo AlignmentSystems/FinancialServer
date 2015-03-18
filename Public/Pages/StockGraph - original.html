@@ -1,0 +1,129 @@
+﻿<!DOCTYPE html>
+<!-- Financial Server - a node.js example of a simplified financial markets real-time data server -->
+<!-- Typical use case: Allow clients of an financial services firm to see the current bid and ask prices of -->
+<!-- Stocks in their portfolio in real time.-->
+<!-- -->
+<!-- Author   :   John Greenan-->
+<!-- Date     :   30th September 2014-->
+<!---->
+<script src="/public/Scripts/d3.js" charset="utf-8"></script>
+<script src="/public/Scripts/primus.js"></script>
+<script src="/public/Scripts/clientlibrary.js"></script>
+<link rel="stylesheet" href="/Public/css/FinancialServer.css" type="text/css" />
+<script>
+
+    var primus = new Primus.connect();
+
+    primus.on('open', function () {
+        console.log(CLIENTHASCONNECTEDTOSERVER);
+    });
+
+    var SendString;
+    var guid;
+    var TargetInstrumentFromMessage = DEFAULTINSTRUMENT;
+
+    (function KickStart() {
+        console.log(CALLINGGUID);
+        LocalGUID();
+        
+        MessageBetweenClientAndServer.comalignmentsystemsjsontype = NAMEMESSAGEBETWEENCLIENTANDSERVER;
+        MessageBetweenClientAndServer.SendingURL = document.URL;
+        MessageBetweenClientAndServer.Verb = VERBCLOSING;
+        MessageBetweenClientAndServer.ClientSessionGuid = guid;
+        SendString = JSON.stringify(MessageBetweenClientAndServer);
+        window.addEventListener('beforeunload', function () {
+            primus.write(SendString);
+        });
+
+        }());
+
+    function LocalGUID() {
+        if (window.sessionStorage.getItem(MAGICSTRING)) {
+            guid = window.sessionStorage.getItem(MAGICSTRING);
+        } else {
+            //if we get here the item does not exist...
+            guid = GetGuid();
+            window.sessionStorage.setItem(MAGICSTRING, guid);
+        }; 
+        MessageBetweenClientAndServer.SendingURL = document.URL;
+        MessageBetweenClientAndServer.Verb = VERBOPENING;
+        MessageBetweenClientAndServer.ClientSessionGuid = guid;
+        primus.write(JSON.stringify(MessageBetweenClientAndServer));;
+        //alert(guid);
+    };
+
+    //primus.write(guid + '~~~~' + document.URL);
+
+    primus.on('close', function () {
+        console.log(DISCONNECTED);
+    });
+
+    //var socket = io.connect();
+
+    /*
+    socket.on('connect', function () {
+        console.log(CLIENTHASCONNECTEDTOSERVER);
+    });
+    */
+
+    /*
+    socket.on('disconnect', function () {
+        console.log(DISCONNECTED);
+    });
+    */
+    //Ok, so we have to get each incoming event, have a look at it and figure out if we are interested in it...
+    //socket.on('TickForClient', function (data) {
+    
+    primus.on('data', function message(data) {
+        //We received data from the server
+        var Received = JSON.parse(data);
+        
+        if (Received.comalignmentsystemsjsontype == NAMEREALTIMEPRICETICK) {
+            console.log(Received.comalignmentsystemsjsontype + ' Received: ' + Received.Stock + ' Target: ' + TargetInstrumentFromMessage);
+            //We need to see if this is one that is of interest to us...
+            if (TargetInstrumentFromMessage == Received.Stock) {
+                var AddThis = document.getElementById('graphstock');
+                var SpecificSet = document.createElement('p');
+                SpecificSet.innerHTML = Received.Stock + ' ' + Received.Timestamp;
+                AddThis.appendChild(SpecificSet);
+                //var GraphObject = document.getElementById('priceEvolution');
+                //var Graph = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+                //Graph.setAttribute("points" 0,1 ) 
+                //GraphObject.appendChild(Graph);
+            };
+        }else if (Received.comalignmentsystemsjsontype == NAMEMESSAGEBETWEENCLIENTANDSERVER) {
+            console.log(Received.comalignmentsystemsjsontype + ' ' + Received.ObjectId);
+            if (TargetInstrumentFromMessage == DEFAULTINSTRUMENT) {
+                //So far we have not been capturing ticks for any instrument 
+            } else if (TargetInstrumentFromMessage != Received.ObjectId) {
+                //We have received a new instrument, not the same as the old one..
+                var AddThis = document.getElementById('graphstock');
+                while (document.getElementById('graphstock').hasChildNodes()) {
+                    document.getElementById('graphstock').removeChild(document.getElementById('graphstock').lastChild);
+                };
+            };
+            TargetInstrumentFromMessage = Received.ObjectId;
+        };
+    });
+    //Now, we need to actually write a graph in svg.
+    //Initial implementation is proposed for one hour window.
+    //So we have 60 minutes x 60 seconds x 1000 milliseconds = 3,600,000 milliseconds.
+    //So, we start with an event at time t=0.  This is populated onto the y axis at the relevant place.  Note that due to the 
+    //limited functionality of the exchange simulator we will only see prices between 0 and 100, so the region needed for the y axis is clearly therefore 0 to 100.
+    //The x axis will be representing 3.6million milliseconds, so we have to do the maths on receipt of the next tick to say 
+    //tick two received 3 seconds after tick one.  3 seconds = 3000 milliseconds.  3,000/3,600,000 = 1/1200.  Therefore we will place this
+    //tick at <length of x axis in pixels)*(1/1200) pixels across from the origin.
+    //Sounds simple so far...
+
+
+</script>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Graph</title>
+</head>
+<body>
+    <svg version="1.1"  id="priceEvolution"  width="600" height="300" style='border: 1px solid black;'></svg> 
+    <div class="text" id="graphstock"></div>
+</body> 
+</html>

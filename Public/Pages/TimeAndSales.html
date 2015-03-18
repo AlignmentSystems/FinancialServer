@@ -6,32 +6,63 @@
 <!-- Author   :   John Greenan-->
 <!-- Date     :   30th September 2014-->
 <!---->
-<script src="/public/Scripts/d3.js" charset="utf-8"></script>
-<script src="/public/Scripts/sorttable.js"></script>
 <!--script src="/socket.io/socket.io.js"></!--script>-->
 <script src="/public/Scripts/primus.js"></script>
+<script src="/public/Scripts/angular.min.js"></script>
+<script src="/public/Scripts/clientlibrary.js"></script>
 <link rel="stylesheet" href="/Public/css/FinancialServer.css" type="text/css"/>
 
 <script>
-    
     //var socket = io.connect();
     var primus = new Primus.connect();
-    primus.on('open', function () {
-        console.log('Client has connected to server');
-    })
+    var SendString;
 
-    primus.on('close', function () {
-        console.log('Disconnected');
+    primus.on('open', function () {
+        console.log(CLIENTHASCONNECTEDTOSERVER);
     });
 
+    var guid;
+    (function KickStart() {
+        console.log(CALLINGGUID);
+        LocalGUID();
+        MessageBetweenClientAndServer.comalignmentsystemsjsontype = NAMEMESSAGEBETWEENCLIENTANDSERVER;
+        MessageBetweenClientAndServer.SendingURL = document.URL;
+        MessageBetweenClientAndServer.Verb = VERBCLOSING;
+        MessageBetweenClientAndServer.ClientSessionGuid = guid;
+        SendString = JSON.stringify(MessageBetweenClientAndServer);
+        window.addEventListener('beforeunload', function () {
+            primus.write(SendString);
+        });
+
+    }());
+
+    function LocalGUID() {
+        if (window.sessionStorage.getItem(MAGICSTRING)) {
+            guid = window.sessionStorage.getItem(MAGICSTRING);
+        } else {
+            //if we get here the item does not exist...
+            guid = GetGuid();
+            window.sessionStorage.setItem(MAGICSTRING, guid);
+        };
+        MessageBetweenClientAndServer.SendingURL = document.URL;
+        MessageBetweenClientAndServer.Verb = VERBOPENING;
+        MessageBetweenClientAndServer.ClientSessionGuid = guid;
+        primus.write(JSON.stringify(MessageBetweenClientAndServer));;
+       // alert(guid);
+    };
+
+    primus.on('close', function () {
+        console.log(DISCONNECTED);
+    });
+    //primus.write(guid + '~~~~' + document.URL);
     /*
     socket.on('connect', function () {
-        console.log('Client has connected to server');
+        console.log(CLIENTHASCONNECTEDTOSERVER);
     });
     */
     /*
     socket.on('disconnect', function () {
-        console.log('Disconnected');
+        console.log(DISCONNECTED);
     });
     */
 
@@ -39,97 +70,99 @@
     //socket.on('TickForClient', function (data) {
     primus.on('data', function message(data) {
         var Received = JSON.parse(data);
-        console.log('On tick received' + data);
-        var TargetTimeAndSales = document.getElementById('TimeAndSales');
+        // console.log('On tick received' + data);
+        if (Received.comalignmentsystemsjsontype == NAMEREALTIMEPRICETICK) {
+            var TargetTimeAndSales = document.getElementById('TimeAndSales');
 
-        var StockReceived = Received.Stock;
-        var SideReceived = Received.Side;
-        var LastTradedPriceReceived = Received.LastTrade;
-        var BidReceived = Received.Bid;
-        var AskReceived = Received.Ask;
-        var VolumeReceived = Received.Volume;
-        var TimestampReceived = Received.Timestamp;
-        var createRow = true;
+            var StockReceived = Received.Stock;
+            var SideReceived = Received.Side;
+            var LastTradedPriceReceived = Received.LastTrade;
+            var BidReceived = Received.Bid;
+            var AskReceived = Received.Ask;
+            var VolumeReceived = Received.Volume;
+            var TimestampReceived = Received.Timestamp;
+            var createRow = true;
 
-        if (TargetTimeAndSales.children.length == 0) {
-            console.log('TargetTimeAndSales table has no rows');
+            if (TargetTimeAndSales.children.length == 0) {
+                console.log('TargetTimeAndSales table has no rows');
 
-            //Table has no rows, so add a header...
-            var Header = document.createElement('TR');
+                //Table has no rows, so add a header...
+                var Header = document.createElement('TR');
 
-            var cell1 = document.createElement('TH');
-            cell1.innerHTML = 'Stock';
+                var cell1 = document.createElement('TH');
+                cell1.innerHTML = 'Stock';
 
-            var cell2 = document.createElement('TH');
-            cell2.innerHTML = 'Side';
+                var cell2 = document.createElement('TH');
+                cell2.innerHTML = 'Side';
 
-            var cell3 = document.createElement('TH');
-            cell3.innerHTML = 'Last Traded Price';
+                var cell3 = document.createElement('TH');
+                cell3.innerHTML = 'Last Traded Price';
 
-            var cell4 = document.createElement('TH');
-            cell4.innerHTML = 'Bid';
+                var cell4 = document.createElement('TH');
+                cell4.innerHTML = 'Bid';
 
-            var cell5 = document.createElement('TH');
-            cell5.innerHTML = 'Ask';
+                var cell5 = document.createElement('TH');
+                cell5.innerHTML = 'Ask';
 
-            var cell6 = document.createElement('TH');
-            cell6.innerHTML = 'Volume';
+                var cell6 = document.createElement('TH');
+                cell6.innerHTML = 'Volume';
 
-            var cell7 = document.createElement('TH');
-            cell7.innerHTML = 'Timestamp';
+                var cell7 = document.createElement('TH');
+                cell7.innerHTML = 'Timestamp';
 
-            Header.appendChild(cell1);
-            Header.appendChild(cell2);
-            Header.appendChild(cell3);
-            Header.appendChild(cell4);
-            Header.appendChild(cell5);
-            Header.appendChild(cell6);
-            Header.appendChild(cell7);
+                Header.appendChild(cell1);
+                Header.appendChild(cell2);
+                Header.appendChild(cell3);
+                Header.appendChild(cell4);
+                Header.appendChild(cell5);
+                Header.appendChild(cell6);
+                Header.appendChild(cell7);
 
-            TargetTimeAndSales.appendChild(Header);
-            console.log('Added header');
-        };
+                TargetTimeAndSales.appendChild(Header);
+                console.log('Added header');
+            };
 
-        //For the time and sales we just drop everything into the grid and the number of
-        //rows will expand...
-        var Body = document.createElement('TBODY');
-        var Row = document.createElement('TR');
+            //For the time and sales we just drop everything into the grid and the number of
+            //rows will expand...
+            var Body = document.createElement('TBODY');
+            var Row = document.createElement('TR');
 
-        var TargetStockCell = document.createElement('TD');
-        var TargetSideCell = document.createElement('TD');
-        var TargetLastTradedCell = document.createElement('TD');
-        var TargetBidCell = document.createElement('TD');
-        var TargetAskCell = document.createElement('TD');
-        var TargetVolumeCell = document.createElement('TD');
-        var TargetTimestampCell = document.createElement('TD');
+            var TargetStockCell = document.createElement('TD');
+            var TargetSideCell = document.createElement('TD');
+            var TargetLastTradedCell = document.createElement('TD');
+            var TargetBidCell = document.createElement('TD');
+            var TargetAskCell = document.createElement('TD');
+            var TargetVolumeCell = document.createElement('TD');
+            var TargetTimestampCell = document.createElement('TD');
 
-        Body.appendChild(Row);
-        Row.appendChild(TargetStockCell);
-        Row.appendChild(TargetSideCell);
-        Row.appendChild(TargetLastTradedCell);
-        Row.appendChild(TargetBidCell);
-        Row.appendChild(TargetAskCell);
-        Row.appendChild(TargetVolumeCell);
-        Row.appendChild(TargetTimestampCell);
+            Body.appendChild(Row);
+            Row.appendChild(TargetStockCell);
+            Row.appendChild(TargetSideCell);
+            Row.appendChild(TargetLastTradedCell);
+            Row.appendChild(TargetBidCell);
+            Row.appendChild(TargetAskCell);
+            Row.appendChild(TargetVolumeCell);
+            Row.appendChild(TargetTimestampCell);
 
 
-        TargetStockCell.innerHTML = StockReceived;
-        TargetSideCell.innerHTML = SideReceived;
-        TargetLastTradedCell.innerHTML = LastTradedPriceReceived;
-        TargetBidCell.innerHTML = BidReceived;
-        TargetAskCell.innerHTML = AskReceived;
-        TargetVolumeCell.innerHTML = VolumeReceived;
-        TargetTimestampCell.innerHTML = TimestampReceived;
+            TargetStockCell.innerHTML = StockReceived;
+            TargetSideCell.innerHTML = SideReceived;
+            TargetLastTradedCell.innerHTML = LastTradedPriceReceived;
+            TargetBidCell.innerHTML = BidReceived;
+            TargetAskCell.innerHTML = AskReceived;
+            TargetVolumeCell.innerHTML = VolumeReceived;
+            TargetTimestampCell.innerHTML = TimestampReceived;
 
-        TargetTimeAndSales.appendChild(Body);
+            TargetTimeAndSales.appendChild(Body);
 
-        TargetStockCell.innerHTML = StockReceived;
-        TargetSideCell.innerHTML = SideReceived;
-        TargetLastTradedCell.innerHTML = LastTradedPriceReceived;
-        TargetBidCell.innerHTML = BidReceived;
-        TargetAskCell.innerHTML = AskReceived;
-        TargetVolumeCell.innerHTML = VolumeReceived;
-        TargetTimestampCell.innerHTML = TimestampReceived;
+            TargetStockCell.innerHTML = StockReceived;
+            TargetSideCell.innerHTML = SideReceived;
+            TargetLastTradedCell.innerHTML = LastTradedPriceReceived;
+            TargetBidCell.innerHTML = BidReceived;
+            TargetAskCell.innerHTML = AskReceived;
+            TargetVolumeCell.innerHTML = VolumeReceived;
+            TargetTimestampCell.innerHTML = TimestampReceived;
+        }
     });
 
 </script>
@@ -138,7 +171,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8" />
-    <title></title>
+    <title>Time and Sales</title>
 </head>
 <body>
     <table class="sortable" id="TimeAndSales"></table>
